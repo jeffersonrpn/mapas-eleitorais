@@ -6,12 +6,12 @@ const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
 import chalk from "chalk";
-import Listr from "listr";
 
 function createMap(candidate) {
   const width = 640;
   const height = 512;
-  const outputLocation = "./output/" + candidate.cpf + ".svg";
+  const dir = "./" + candidate.election.year;
+  const file = candidate.cpf + ".svg";
 
   const fakeDom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
   let body = d3.select(fakeDom.window.document).select("body");
@@ -73,7 +73,7 @@ function createMap(candidate) {
     .attr("class", d => "m-" + d.id)
     .attr("d", path)
     .attr("stroke-width", "0.5")
-    .attr("stroke", "#cecece")
+    .attr("stroke", "#dfdfdf")
     .attr("fill", d => "#000");
   request(
     "https://eleicoes.datapedia.info/api/votes/bystate/" +
@@ -92,7 +92,10 @@ function createMap(candidate) {
     });
 
     // Output
-    
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+    const outputLocation = dir + "/" + file;
     fs.writeFileSync(outputLocation, body.select(".container").html());
     return true;
   });
@@ -100,11 +103,11 @@ function createMap(candidate) {
 
 function getCandidates(options) {
   return new Promise(resolve => {
-    console.log("Carregando lista de candidatos.");
+    console.log("Carregando lista de Deputados Federais.");
     request
       .get(
         "https://eleicoes.datapedia.info/api/candidates/post/" +
-          options.cargo +
+        6 + // Código para Deputados Federais no TSE
           "/" +
           options.ano +
           "/" +
@@ -116,16 +119,21 @@ function getCandidates(options) {
         console.log(chalk.green(result.count) + " candidatos encontrados.");
         resolve(result.rows);
       });
-  })
+  });
 }
 
-export function run(options) {
-  console.log("Gerando mapas eleitorais para ", chalk.green(options.uf), " ", chalk.green(options.ano));
+export function createMapsFromOptions(options) {
+  console.log(
+    "Gerando mapas eleitorais para " +
+      chalk.green(options.uf) +
+      " " +
+      chalk.green(options.ano)
+  );
   getCandidates(options).then(candidates => {
     console.log("Carregando votos.");
     candidates.forEach(candidate => {
       createMap(candidate);
-    })
+    });
     console.log(chalk.green("Pronto!"));
   });
 }
