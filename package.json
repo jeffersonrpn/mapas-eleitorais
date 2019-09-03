@@ -1,18 +1,27 @@
 {
-  "name": "mapas-eleitorais",
+  "name": "@jeffersonrpn/mapas-eleitorais",
   "version": "1.0.0",
   "description": "Desenha mapas de votação dos Deputados Federais brasileiros",
-  "main": "index.js",
+  "main": "src/index.js",
+  "bin": {
+    "@jeffersonrpn/mapas-eleitorais": "bin/gerar-mapas-eleitorais",
+    "gerar-mapas-eleitorais": "bin/gerar-mapas-eleitorais"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "brasil"
+    "brasil",
+    "eleições"
   ],
   "author": "Jefferson Neves <jefferson.rpn@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "d3": "^5.11.0",
+    "esm": "^3.2.25",
     "jsdom": "^15.1.1",
     "request-promise": "^4.2.4",
     "topojson": "^3.0.2"
