@@ -1,5 +1,6 @@
 const fs = require("fs");
 const request = require("request-promise");
+const csv = require("csv-parser");
 const d3 = require("d3");
 const topojson = require("topojson");
 const jsdom = require("jsdom");
@@ -101,7 +102,7 @@ function createMap(candidate) {
   });
 }
 
-function getCandidates(options) {
+function getCandidates(options, filter) {
   return new Promise(resolve => {
     console.log("Carregando lista de Deputados Federais.");
     request
@@ -116,8 +117,19 @@ function getCandidates(options) {
       )
       .then(result => {
         result = JSON.parse(result);
-        console.log(chalk.green(result.count) + " candidatos encontrados.");
-        resolve(result.rows);
+        let filtered = result.rows;
+        if (filter.length > 0) {
+          filtered = result.rows.filter(candidate =>
+            filter.includes(candidate.cpf)
+          );
+        }
+        console.log(
+          chalk.green(filtered.length) +
+            "/" +
+            result.count +
+            " candidatos encontrados."
+        );
+        resolve(filtered);
       });
   });
 }
@@ -129,11 +141,45 @@ export function createMapsFromOptions(options) {
       " " +
       chalk.green(options.ano)
   );
-  getCandidates(options).then(candidates => {
-    console.log("Carregando votos.");
+  getCandidates(options, []).then(candidates => {
+    console.log("Carregando votos...");
     candidates.forEach(candidate => {
       createMap(candidate);
     });
     console.log(chalk.green("Pronto!"));
   });
+}
+
+export function createMapsFromCSV(options) {
+  console.log(
+    "Gerando mapas eleitorais para " +
+      chalk.green(options.uf) +
+      " " +
+      chalk.green(options.ano)
+  );
+  console.log(
+    "Carregando filtro   (" +
+      chalk.green(options.csv) +
+      ")"
+  );
+  let cpfs = [];
+  fs.createReadStream(options.csv)
+    .pipe(
+      csv({ separator: ",", mapHeaders: ({ header }) => header.toLowerCase() })
+    )
+    .on("data", row => {
+      cpfs.push(row["cpf"]);
+    })
+    .on("end", () => {
+      getCandidates(options, cpfs).then(candidates => {
+        console.log("Carregando votos...");
+        candidates.forEach(candidate => {
+          createMap(candidate);
+        });
+        console.log(chalk.green("Pronto!"));
+      });
+    })
+    .on("error", () => {
+      console.log(chalk.red("Erro na leitura do arquivo."));
+    });
 }
