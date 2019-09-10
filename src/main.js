@@ -104,7 +104,7 @@ function createMap(candidate) {
 
 function getCandidates(options, filter) {
   return new Promise(resolve => {
-    console.log("Carregando lista de Deputados Federais.");
+    console.log("Carregando lista de Deputados Federais...");
     request
       .get(
         "https://eleicoes.datapedia.info/api/candidates/post/" +
@@ -155,13 +155,10 @@ export function createMapsFromCSV(options) {
     "Gerando mapas eleitorais para " +
       chalk.green(options.uf) +
       " " +
-      chalk.green(options.ano)
+      chalk.green(options.ano) +
+      "..."
   );
-  console.log(
-    "Carregando filtro   (" +
-      chalk.green(options.csv) +
-      ")"
-  );
+  console.log("Carregando filtro   (" + chalk.green(options.csv) + ")...");
   let cpfs = [];
   fs.createReadStream(options.csv)
     .pipe(
